@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Environment variables (chứa mật khẩu - KHÔNG được push lên!)
+.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Memory — Sign In</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600&family=Inter:wght@300;400;500&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --blur-bg: rgba(10, 10, 20, 0.55);
+            --glass: rgba(255, 255, 255, 0.07);
+            --glass-border: rgba(255, 255, 255, 0.13);
+            --text: #f0f0f5;
+            --text-dim: rgba(240, 240, 245, 0.55);
+            --accent: #a78bfa;
+            --accent2: #60a5fa;
+            --error: #f87171;
+        }
+
+        html,
+        body {
+            height: 100%;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            overflow: hidden;
+            background: #0a0a14;
+        }
+
+        /* ── Animated Background ── */
+        .bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 30% 40%, rgba(88, 28, 220, 0.35) 0%, transparent 60%),
+                radial-gradient(ellipse 70% 50% at 75% 70%, rgba(30, 80, 200, 0.28) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 60% at 55% 20%, rgba(160, 50, 200, 0.2) 0%, transparent 60%),
+                #090915;
+        }
+
+        .bg::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+
+        /* Floating light orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+            animation: floatOrb 12s ease-in-out infinite;
+        }
+
+        .orb1 {
+            width: 500px;
+            height: 500px;
+            background: rgba(120, 60, 220, 0.18);
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .orb2 {
+            width: 400px;
+            height: 400px;
+            background: rgba(40, 100, 220, 0.15);
+            bottom: -80px;
+            right: -80px;
+            animation-delay: -6s;
+        }
+
+        .orb3 {
+            width: 300px;
+            height: 300px;
+            background: rgba(200, 80, 180, 0.12);
+            top: 40%;
+            right: 20%;
+            animation-delay: -3s;
+        }
+
+        @keyframes floatOrb {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            33% {
+                transform: translate(30px, -30px) scale(1.05);
+            }
+
+            66% {
+                transform: translate(-20px, 20px) scale(0.97);
+            }
+        }
+
+        /* Particle stars */
+        .stars {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            border-radius: 50%;
+            background: white;
+            animation: twinkle var(--dur, 4s) ease-in-out infinite;
+            animation-delay: var(--delay, 0s);
+        }
+
+        @keyframes twinkle {
+
+            0%,
+            100% {
+                opacity: var(--max-op, 0.6);
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.1;
+                transform: scale(0.6);
+            }
+        }
+
+        /* ── Login Wrapper ── */
+        .login-wrapper {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+        }
+
+        /* Time / Date */
+        .clock-area {
+            text-align: center;
+            margin-bottom: 48px;
+            opacity: 0;
+            animation: fadeIn 1s 0.5s forwards;
+        }
+
+        .clock-time {
+            font-size: 72px;
+            font-weight: 200;
+            color: var(--text);
+            letter-spacing: -2px;
+            text-shadow: 0 0 40px rgba(167, 139, 250, 0.3);
+        }
+
+        .clock-date {
+            font-size: 16px;
+            color: var(--text-dim);
+            margin-top: 4px;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        /* ── Avatar Section ── */
+        .avatar-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .avatar-ring {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #a78bfa, #60a5fa, #f472b6, #a78bfa);
+            padding: 3px;
+            box-shadow: 0 0 40px rgba(167, 139, 250, 0.4), 0 0 80px rgba(167, 139, 250, 0.15);
+            animation: ringPulse 3s ease-in-out infinite;
+            opacity: 0;
+            animation: fadeIn 0.8s 0.2s forwards, ringPulse 3s 1s ease-in-out infinite;
+            cursor: default;
+        }
+
+        @keyframes ringPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 30px rgba(167, 139, 250, 0.4), 0 0 60px rgba(167, 139, 250, 0.15);
+            }
+
+            50% {
+                box-shadow: 0 0 50px rgba(167, 139, 250, 0.6), 0 0 100px rgba(167, 139, 250, 0.25);
+            }
+        }
+
+        .avatar-ring-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #1a1a2e;
+        }
+
+        .avatar-ring-inner img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .avatar-ring:hover img {
+            transform: scale(1.05);
+        }
+
+        .user-display-name {
+            font-size: 22px;
+            font-weight: 400;
+            color: var(--text);
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            animation: fadeIn 0.8s 0.5s forwards;
+        }
+
+        /* ── Password Panel ── */
+        .password-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            width: 320px;
+            margin-top: 8px;
+
+            /* Hidden by default */
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+            transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .password-panel.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+        }
+
+        .password-input-wrap {
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 100px;
+            padding: 14px 52px 14px 22px;
+            font-size: 15px;
+            font-weight: 300;
+            color: var(--text);
+            letter-spacing: 1px;
+            outline: none;
+            backdrop-filter: blur(12px);
+            transition: border-color 0.3s, background 0.3s, box-shadow 0.3s;
+            caret-color: var(--accent);
+        }
+
+        .password-input::placeholder {
+            color: var(--text-dim);
+            letter-spacing: 0px;
+            font-weight: 300;
+        }
+
+        .password-input:focus {
+            border-color: rgba(167, 139, 250, 0.5);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.12), inset 0 0 20px rgba(167, 139, 250, 0.05);
+        }
+
+        .submit-btn {
+            position: absolute;
+            right: 6px;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border: none;
+            cursor: pointer;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+            opacity: 0.7;
+        }
+
+        .submit-btn:hover {
+            transform: scale(1.08);
+            opacity: 1;
+            box-shadow: 0 0 20px rgba(167, 139, 250, 0.5);
+        }
+
+        .submit-btn:active {
+            transform: scale(0.95);
+        }
+
+        .submit-btn svg {
+            width: 17px;
+            height: 17px;
+            fill: white;
+        }
+
+        .eye-btn {
+            position: absolute;
+            right: 52px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: none;
+            border: none;
+            cursor: pointer;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dim);
+            transition: color 0.2s;
+            opacity: 0.6;
+        }
+
+        .eye-btn:hover {
+            color: var(--text);
+            opacity: 1;
+        }
+
+        .eye-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .error-msg {
+            font-size: 13px;
+            color: var(--error);
+            text-align: center;
+            min-height: 18px;
+            transition: opacity 0.3s;
+            opacity: 0;
+        }
+
+        .error-msg.show {
+            opacity: 1;
+        }
+
+        /* Spinner */
+        .spinner {
+            width: 22px;
+            height: 22px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── Animations ── */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Slide-up reveal when any key pressed */
+        .avatar-section.reveal-panel .hint-text {
+            display: none;
+        }
+
+        /* Flash ripple on keypress */
+        .keypress-ripple {
+            position: fixed;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(167, 139, 250, 0.3), transparent 70%);
+            pointer-events: none;
+            z-index: 5;
+            animation: rippleOut 0.6s ease-out forwards;
+        }
+
+        @keyframes rippleOut {
+            from {
+                opacity: 1;
+                transform: scale(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: scale(3);
+            }
+        }
+
+        /* ── Bottom extras ── */
+        .bottom-bar {
+            position: fixed;
+            bottom: 28px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 36px;
+            z-index: 10;
+        }
+
+        .bottom-icon {
+            color: rgba(255, 255, 255, 0.55);
+            cursor: default;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            transition: color 0.2s;
+        }
+
+        .bottom-icon:hover {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .bottom-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Loading overlay after login */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: #090915;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .login-overlay-text {
+            color: var(--text-dim);
+            font-size: 15px;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg"></div>
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+    <div class="stars" id="stars"></div>
+
+    <div class="login-wrapper">
+
+        <!-- Clock -->
+        <div class="clock-area">
+            <div class="clock-time" id="clock">00:00</div>
+            <div class="clock-date" id="date">Thứ Hai, 4 tháng 3, 2026</div>
+        </div>
+
+        <!-- Avatar + Password -->
+        <div class="avatar-section" id="avatarSection">
+            <div class="avatar-ring" id="avatarRing">
+                <div class="avatar-ring-inner">
+                    <img src="avatar.png" alt="avatar"
+                        onerror="this.src='https://ui-avatars.com/api/?name=Me&background=7c3aed&color=fff&size=120'" />
+                </div>
+            </div>
+
+            <div class="user-display-name" id="displayName">Memory</div>
+
+
+            <!-- Password Panel -->
+            <div class="password-panel" id="passwordPanel">
+                <div class="password-input-wrap" style="margin-bottom:10px;">
+                    <input type="text" id="usernameInput" class="password-input" placeholder="Tên đăng nhập"
+                        autocomplete="username" autocapitalize="none" spellcheck="false" />
+                </div>
+                <div class="password-input-wrap">
+                    <input type="password" id="passwordInput" class="password-input" placeholder="Mật khẩu"
+                        autocomplete="current-password" autocapitalize="none" spellcheck="false" />
+                    <button class="eye-btn" id="eyeBtn" tabindex="-1" title="Hiện/ẩn mật khẩu">
+                        <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12S5 5 12 5s11 7 11 7-4 7-11 7S1 12 1 12z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                    </button>
+                    <button class="submit-btn" id="submitBtn" title="Đăng nhập">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="error-msg" id="errorMsg"></div>
+                <div class="spinner" id="spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottom-bar">
+        <div class="bottom-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z" />
+            </svg>
+            Memory Album
+        </div>
+        <div class="bottom-icon" id="bottomClock">18:54</div>
+    </div>
+
+    <!-- Login overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-overlay-text" id="loginOverlayText">Đang đăng nhập…</div>
+    </div>
+
+    <script>
+        // ── Stars ────────────────────────────────────────────────────────────────────
+        (function () {
+            const c = document.getElementById('stars');
+            for (let i = 0; i < 120; i++) {
+                const s = document.createElement('div');
+                s.className = 'star';
+                const sz = Math.random() * 2.5 + 0.5;
+                s.style.cssText = `
+      width:${sz}px; height:${sz}px;
+      left:${Math.random() * 100}vw; top:${Math.random() * 100}vh;
+      --dur:${(Math.random() * 5 + 3).toFixed(1)}s;
+      --delay:-${(Math.random() * 8).toFixed(1)}s;
+      --max-op:${(Math.random() * 0.5 + 0.2).toFixed(2)};
+    `;
+                c.appendChild(s);
+            }
+        })();
+
+        // ── Clock ────────────────────────────────────────────────────────────────────
+        function updateClock() {
+            const now = new Date();
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${hh}:${mm}`;
+            document.getElementById('bottomClock').textContent = `${hh}:${mm}`;
+
+            const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+            const months = ['tháng 1', 'tháng 2', 'tháng 3', 'tháng 4', 'tháng 5', 'tháng 6',
+                'tháng 7', 'tháng 8', 'tháng 9', 'tháng 10', 'tháng 11', 'tháng 12'];
+            document.getElementById('date').textContent =
+                `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}, ${now.getFullYear()}`;
+        }
+        updateClock(); setInterval(updateClock, 1000);
+
+        // ── State ─────────────────────────────────────────────────────────────────────
+        const panel = document.getElementById('passwordPanel');
+        const input = document.getElementById('passwordInput');
+        let panelVisible = false;
+
+        function showPanel() {
+            if (panelVisible) return;
+            panelVisible = true;
+            panel.classList.add('visible');
+            setTimeout(() => document.getElementById('usernameInput').focus(), 400);
+        }
+
+        // Ripple effect khi kích hoạt
+        function spawnRipple() {
+            const r = document.createElement('div');
+            r.className = 'keypress-ripple';
+            const size = Math.max(window.innerWidth, window.innerHeight) * 1.5;
+            r.style.cssText = `left:${window.innerWidth / 2 - size / 2}px;top:${window.innerHeight / 2 - size / 2}px;width:${size}px;height:${size}px;`;
+            document.body.appendChild(r);
+            r.addEventListener('animationend', () => r.remove());
+        }
+
+        // Click avatar → hiện panel
+        document.getElementById('avatarRing').addEventListener('click', () => {
+            spawnRipple(); showPanel();
+        });
+
+        // Nhấn phím bất kỳ → hiện panel
+        document.addEventListener('keydown', (e) => {
+            if (panelVisible) return;
+            spawnRipple(); showPanel();
+            // Nếu gõ ký tự in được thì điền vào ô username
+            if (e.key.length === 1) {
+                setTimeout(() => {
+                    const u = document.getElementById('usernameInput');
+                    u.value = e.key; u.dispatchEvent(new Event('input'));
+                }, 420);
+            }
+        });
+
+        // ── Eye toggle ────────────────────────────────────────────────────────────────
+        let showPass = false;
+        document.getElementById('eyeBtn').addEventListener('click', () => {
+            showPass = !showPass;
+            input.type = showPass ? 'text' : 'password';
+            document.getElementById('eyeIcon').innerHTML = showPass
+                ? `<path d="M17.94 17.94A10.94 10.94 0 0112 19C5 19 1 12 1 12a18.09 18.09 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.09 18.09 0 01-4.59 5.59M3 3l18 18"/>`
+                : `<path d="M1 12S5 5 12 5s11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/>`;
+        });
+
+        // ── Error ─────────────────────────────────────────────────────────────────────
+        function showError(msg) {
+            const el = document.getElementById('errorMsg');
+            el.textContent = msg; el.classList.add('show');
+            input.style.borderColor = 'rgba(248,113,113,0.5)';
+            input.style.animation = 'shake 0.4s ease';
+            setTimeout(() => { input.style.animation = ''; }, 400);
+        }
+        function clearError() {
+            const el = document.getElementById('errorMsg');
+            el.classList.remove('show');
+            input.style.borderColor = '';
+        }
+
+        // Shake keyframe
+        const shakeStyle = document.createElement('style');
+        shakeStyle.textContent = `@keyframes shake {
+  0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)}
+  40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)}
+}`;
+        document.head.appendChild(shakeStyle);
+
+        // ── Login ─────────────────────────────────────────────────────────────────────
+        async function doLogin() {
+            const username = document.getElementById('usernameInput').value.trim();
+            const pw = input.value.trim();
+            if (!username) { showError('Nhập tên đăng nhập nào 👤'); return; }
+            if (!pw) { showError('Nhập mật khẩu nào 👻'); return; }
+
+            clearError();
+            document.getElementById('submitBtn').style.display = 'none';
+            document.getElementById('spinner').style.display = 'block';
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password: pw }),
+                });
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.error || 'Đăng nhập thất bại');
+
+                localStorage.setItem('album_token', data.token);
+                localStorage.setItem('album_user', JSON.stringify(data.user));
+
+                // Success animation
+                const overlay = document.getElementById('loginOverlay');
+                overlay.classList.add('active');
+                document.getElementById('loginOverlayText').textContent =
+                    `Xin chào, ${data.user.displayName || data.user.username} 👋`;
+                setTimeout(() => { window.location.href = '/album'; }, 1200);
+
+            } catch (err) {
+                document.getElementById('submitBtn').style.display = '';
+                document.getElementById('spinner').style.display = 'none';
+                showError(err.message);
+            }
+        }
+
+        document.getElementById('submitBtn').addEventListener('click', doLogin);
+        document.getElementById('passwordInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') doLogin();
+            clearError();
+        });
+
+        // ── Check if already logged in ───────────────────────────────────────────────
+        (function () {
+            const token = localStorage.getItem('album_token');
+            if (token) {
+                // Quick verify
+                fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
+                    .then(r => { if (r.ok) window.location.href = '/album'; })
+                    .catch(() => { });
+            }
+        })();
+    </script>
+</body>
+
+</html>
