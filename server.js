@@ -14,22 +14,33 @@ const PORT = process.env.PORT || 3000;
 let dbConnected = false; // flag kiểm tra DB có kết nối không
 
 // ─── Cloudinary Config ─────────────────────────────────────────────────────────
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-// ─── Multer + Cloudinary Storage ────────────────────────────────────────────────
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: 'memory-album',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic'],
-    transformation: [{ quality: 'auto', fetch_format: 'auto' }],
-  },
-});
-const upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 } }); // 20MB
+let upload;
+try {
+  if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
+    const storage = new CloudinaryStorage({
+      cloudinary,
+      params: {
+        folder: 'memory-album',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic'],
+        transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+      },
+    });
+    upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 } });
+    console.log('✅ Cloudinary configured');
+  } else {
+    // Fallback: lưu local khi chưa cấu hình Cloudinary
+    upload = multer({ dest: 'public/uploads/', limits: { fileSize: 20 * 1024 * 1024 } });
+    console.log('⚠️  Cloudinary not configured — using local storage fallback');
+  }
+} catch (err) {
+  upload = multer({ dest: 'public/uploads/', limits: { fileSize: 20 * 1024 * 1024 } });
+  console.error('❌ Cloudinary init error:', err.message);
+}
 
 // ─── Middleware ─────────────────────────────────────────────────────────────────
 app.use(cors());
