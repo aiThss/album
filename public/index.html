@@ -135,8 +135,101 @@
             }
 
             50% {
-                opacity: 0.1;
-                transform: scale(0.6);
+                opacity: 0.08;
+                transform: scale(0.5);
+            }
+        }
+
+        /* ── Shooting stars ── */
+        .shooting-star {
+            position: fixed;
+            top: var(--top);
+            left: -200px;
+            width: var(--len, 160px);
+            height: 1.5px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), rgba(167, 139, 250, 0.6), transparent);
+            border-radius: 2px;
+            z-index: 1;
+            pointer-events: none;
+            animation: shootAcross var(--spd, 1.8s) var(--delay2, 0s) ease-in forwards;
+            opacity: 0;
+            transform: rotate(var(--angle, -12deg));
+            transform-origin: left center;
+        }
+
+        .shooting-star::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 0 6px 2px rgba(167, 139, 250, 0.8);
+        }
+
+        @keyframes shootAcross {
+            0% {
+                opacity: 0;
+                left: -200px;
+            }
+
+            5% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 0.8;
+            }
+
+            100% {
+                opacity: 0;
+                left: 120vw;
+            }
+        }
+
+        /* ── Star burst particles (on keypress) ── */
+        .burst-star {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 6;
+            animation: burstFly var(--dur2, 1s) var(--ease2, cubic-bezier(0, 0.9, 0.57, 1)) forwards;
+        }
+
+        @keyframes burstFly {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(var(--tx), var(--ty)) scale(0);
+            }
+        }
+
+        /* Outer ring flash */
+        .burst-ring {
+            position: fixed;
+            border-radius: 50%;
+            border: 1.5px solid rgba(167, 139, 250, 0.6);
+            pointer-events: none;
+            z-index: 5;
+            animation: ringExpand 0.7s ease-out forwards;
+        }
+
+        @keyframes ringExpand {
+            from {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0.9;
+            }
+
+            to {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0;
             }
         }
 
@@ -406,26 +499,9 @@
             display: none;
         }
 
-        /* Flash ripple on keypress */
+        /* Flash ripple on keypress — replaced by star burst */
         .keypress-ripple {
-            position: fixed;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(167, 139, 250, 0.3), transparent 70%);
-            pointer-events: none;
-            z-index: 5;
-            animation: rippleOut 0.6s ease-out forwards;
-        }
-
-        @keyframes rippleOut {
-            from {
-                opacity: 1;
-                transform: scale(0);
-            }
-
-            to {
-                opacity: 0;
-                transform: scale(3);
-            }
+            display: none;
         }
 
         /* ── Bottom extras ── */
@@ -562,20 +638,49 @@
         // ── Stars ────────────────────────────────────────────────────────────────────
         (function () {
             const c = document.getElementById('stars');
-            for (let i = 0; i < 120; i++) {
+            const colors = ['#ffffff', '#e0e8ff', '#c8d5ff', '#d8c8ff', '#a0c4ff', '#ffe0f0'];
+            for (let i = 0; i < 200; i++) {
                 const s = document.createElement('div');
                 s.className = 'star';
-                const sz = Math.random() * 2.5 + 0.5;
-                s.style.cssText = `
-      width:${sz}px; height:${sz}px;
-      left:${Math.random() * 100}vw; top:${Math.random() * 100}vh;
-      --dur:${(Math.random() * 5 + 3).toFixed(1)}s;
-      --delay:-${(Math.random() * 8).toFixed(1)}s;
-      --max-op:${(Math.random() * 0.5 + 0.2).toFixed(2)};
-    `;
+                const sz = Math.random() * 2.8 + 0.3;
+                const col = colors[Math.floor(Math.random() * colors.length)];
+                s.style.cssText = [
+                    `width:${sz}px`, `height:${sz}px`,
+                    `left:${Math.random() * 100}vw`, `top:${Math.random() * 100}vh`,
+                    `background:${col}`,
+                    `box-shadow:0 0 ${(sz * 2).toFixed(1)}px ${col}`,
+                    `--dur:${(Math.random() * 6 + 2).toFixed(1)}s`,
+                    `--delay:-${(Math.random() * 10).toFixed(1)}s`,
+                    `--max-op:${(Math.random() * 0.55 + 0.25).toFixed(2)}`,
+                ].join(';');
                 c.appendChild(s);
             }
         })();
+
+        // ── Shooting stars ────────────────────────────────────────────────────────────
+        function spawnShootingStar() {
+            const el = document.createElement('div');
+            el.className = 'shooting-star';
+            const len = Math.random() * 220 + 80;
+            const spd = (Math.random() * 1.4 + 0.8).toFixed(2);
+            const angle = -(Math.random() * 20 + 5);
+            el.style.cssText = [
+                `--top:${Math.random() * 80}vh`,
+                `--len:${len}px`,
+                `--spd:${spd}s`,
+                `--delay2:0s`,
+                `--angle:${angle}deg`,
+            ].join(';');
+            document.body.appendChild(el);
+            el.addEventListener('animationend', () => el.remove());
+        }
+        function scheduleStar() {
+            spawnShootingStar();
+            if (Math.random() < 0.25) setTimeout(spawnShootingStar, 160);
+            if (Math.random() < 0.1) setTimeout(spawnShootingStar, 320);
+            setTimeout(scheduleStar, Math.random() * 3500 + 1000);
+        }
+        setTimeout(scheduleStar, 600);
 
         // ── Clock ────────────────────────────────────────────────────────────────────
         function updateClock() {
@@ -605,26 +710,87 @@
             setTimeout(() => document.getElementById('usernameInput').focus(), 400);
         }
 
-        // Ripple effect khi kích hoạt
-        function spawnRipple() {
-            const r = document.createElement('div');
-            r.className = 'keypress-ripple';
-            const size = Math.max(window.innerWidth, window.innerHeight) * 1.5;
-            r.style.cssText = `left:${window.innerWidth / 2 - size / 2}px;top:${window.innerHeight / 2 - size / 2}px;width:${size}px;height:${size}px;`;
-            document.body.appendChild(r);
-            r.addEventListener('animationend', () => r.remove());
+        // Star burst explosion khi kích hoạt
+        function spawnStarBurst(cx, cy) {
+            const colors = ['#ffffff', '#a78bfa', '#60a5fa', '#f472b6', '#fbbf24', '#c4b5fd'];
+            const count = 48;
+
+            // Ring flash
+            const ring = document.createElement('div');
+            ring.className = 'burst-ring';
+            const ringSize = Math.min(window.innerWidth, window.innerHeight) * 0.7;
+            ring.style.cssText = `left:${cx}px;top:${cy}px;width:${ringSize}px;height:${ringSize}px;`;
+            document.body.appendChild(ring);
+            ring.addEventListener('animationend', () => ring.remove());
+
+            // Second bigger ring
+            const ring2 = document.createElement('div');
+            ring2.className = 'burst-ring';
+            ring2.style.cssText = `left:${cx}px;top:${cy}px;width:${ringSize * 1.6}px;height:${ringSize * 1.6}px;border-color:rgba(96,165,250,0.4);animation-duration:1s;animation-delay:0.1s;`;
+            document.body.appendChild(ring2);
+            ring2.addEventListener('animationend', () => ring2.remove());
+
+            // Burst particles
+            for (let i = 0; i < count; i++) {
+                const p = document.createElement('div');
+                p.className = 'burst-star';
+                const angle = (i / count) * Math.PI * 2 + Math.random() * 0.3;
+                const dist = Math.random() * (Math.min(window.innerWidth, window.innerHeight) * 0.45) + 60;
+                const sz = Math.random() * 4 + 1.5;
+                const col = colors[Math.floor(Math.random() * colors.length)];
+                const dur = (Math.random() * 0.6 + 0.7).toFixed(2);
+                const tx = (Math.cos(angle) * dist).toFixed(1);
+                const ty = (Math.sin(angle) * dist).toFixed(1);
+                p.style.cssText = [
+                    `left:${cx}px`, `top:${cy}px`,
+                    `width:${sz}px`, `height:${sz}px`,
+                    `background:${col}`,
+                    `box-shadow:0 0 ${sz * 3}px ${sz}px ${col}`,
+                    `--tx:${tx}px`, `--ty:${ty}px`,
+                    `--dur2:${dur}s`,
+                    `margin-left:-${sz / 2}px`, `margin-top:-${sz / 2}px`,
+                ].join(';');
+                document.body.appendChild(p);
+                p.addEventListener('animationend', () => p.remove());
+            }
+
+            // Trailing sparkles (smaller, slower)
+            for (let i = 0; i < 24; i++) {
+                setTimeout(() => {
+                    const sp = document.createElement('div');
+                    sp.className = 'burst-star';
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = Math.random() * 120 + 40;
+                    const sz = Math.random() * 2.5 + 0.8;
+                    const col = colors[Math.floor(Math.random() * colors.length)];
+                    sp.style.cssText = [
+                        `left:${cx + (Math.random() - 0.5) * 80}px`,
+                        `top:${cy + (Math.random() - 0.5) * 80}px`,
+                        `width:${sz}px`, `height:${sz}px`,
+                        `background:${col}`,
+                        `box-shadow:0 0 ${sz * 4}px ${col}`,
+                        `--tx:${(Math.cos(angle) * dist).toFixed(1)}px`,
+                        `--ty:${(Math.sin(angle) * dist).toFixed(1)}px`,
+                        `--dur2:${(Math.random() * 0.8 + 0.9).toFixed(2)}s`,
+                        `margin-left:-${sz / 2}px`, `margin-top:-${sz / 2}px`,
+                    ].join(';');
+                    document.body.appendChild(sp);
+                    sp.addEventListener('animationend', () => sp.remove());
+                }, Math.random() * 200);
+            }
         }
 
         // Click avatar → hiện panel
         document.getElementById('avatarRing').addEventListener('click', () => {
-            spawnRipple(); showPanel();
+            spawnStarBurst(window.innerWidth / 2, window.innerHeight / 2);
+            showPanel();
         });
 
         // Nhấn phím bất kỳ → hiện panel
         document.addEventListener('keydown', (e) => {
             if (panelVisible) return;
-            spawnRipple(); showPanel();
-            // Nếu gõ ký tự in được thì điền vào ô username
+            spawnStarBurst(window.innerWidth / 2, window.innerHeight / 2);
+            showPanel();
             if (e.key.length === 1) {
                 setTimeout(() => {
                     const u = document.getElementById('usernameInput');
